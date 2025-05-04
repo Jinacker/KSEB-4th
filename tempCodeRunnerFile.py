@@ -1,1 +1,1 @@
-부분
+https://www.acmicpc.net/problem/3896

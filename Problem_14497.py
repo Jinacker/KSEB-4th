@@ -1,88 +1,67 @@
-# # https://www.acmicpc.net/problem/14497
+from collections import deque  # BFS 돌릴 때 큐 써야 돼서 가져옴
 
-# 첫째 줄에 주난이가 위치한 교실의 크기 N, M이 주어진다. (1 ≤ N, M ≤ 300)
+# 교실 크기 입력 받음
+N, M = map(int, input().split())
 
-# 둘째 줄에 주난이의 위치 x1, y1과 범인의 위치 x2, y2가 주어진다. (1 ≤ x1, x2 ≤ N, 1 ≤ y1, y2 ≤ M)
+# 주난이랑 범인 위치 받음
+x1, y1, x2, y2 = map(int, input().split())
 
-# 이후 N×M 크기의 교실 정보가 주어진다. 0은 빈 공간, 1은 친구, *는 주난, #는 범인을 뜻한다.
-'''''
-5 7
-3 4 1 2
-1#10111
-1101001
-001*111
-1101111
-0011001
-'''''
-
-N, M = map(int,input().split()) # 교실 위치 N과 M
-
-x1,y1,x2,y2 = map(int,input().split()) # 주난이 위치: x1 y1 // 범인 위치: x2 y2
-
-# 행렬과 인덱스 맞춰주기
-x1 -= 1 # 행
-y1 -= 1 # 열
+# 1부터 시작하는 좌표니까 파이썬 인덱스에 맞게 -1 해줌
+x1 -= 1
+y1 -= 1
 x2 -= 1
 y2 -= 1
 
-# NxM 교실 정보 받기 완료
+# 교실 상태 입력받기 (문자 하나하나 리스트에 쪼개서 2차원 배열로 넣음)
+room = [list(input().strip()) for _ in range(N)]
 
-ClassRoom = [0 for _ in range(N)] 
+# 방향 설정 (상하좌우) — 인접한 곳만 퍼질 수 있음
+dx = [-1, 1, 0, 0]
+dy = [0, 0, -1, 1]
 
-for i in range (N): # N 열 만큼
-    ClassRoom[i] = list(input().strip())  # 이렇게 list에 strip() 써야 하나씩 받을수있다.
-    
-# 주난이 위치: 3,4를 입력으로 받음.
-print(ClassRoom[2][3])
+# 방문 여부 체크 배열 (중복 방문 막기용)
+visited = [[False] * M for _ in range(N)]
 
-# 주난이가 범인 찾을떄까지 반복
-# 주난이의 파동은 상하좌우 4방향으로 친구들을 쓰러뜨릴(?) 때 까지 계속해서 퍼져나간다. 
-# 다르게 표현해서, 한 번의 점프는 한 겹의 친구들을 쓰러뜨린다. 다음의 예를 보자.
+# 시작 위치 큐에 넣고 방문 처리
+queue = deque()
+queue.append((x1, y1))
+visited[x1][y1] = True
 
+# 파동 횟수 카운트
+count = 0
 
-count = 0 # 범인 잡기까지의 횟수
+# 본격적으로 BFS 시작
+while True:
+    count += 1  # 파동 한 번 더 씀 (턴 하나 추가됨)
 
-while (1):
-    count += 1
-    
-    # 일단 첫번째 주난이의 난 페이즈 구현
-    
-    # 이렇게 탐색 해야함.
-    
-    # y 열 부분
-    # ClassRoom[y1-1][x1] ~ ClassRoom[y1+1][x1]
-    
-    for i in range(x1-1,x1+2): # 인덱스 y-1 ~ y+1 2=> 1
-        if ClassRoom[i][y1] == "*": # 만약 주난이면 스킵
-            continue
-        elif ClassRoom[i][y1] == "#": # 만약 범인이면 !!! 잡았다 요놈
-            ClassRoom[i][y1] = "X"
-            print(count) # 카운트 출력.
-            break
-        
-        # 장애물들 깎아내기. 0으로
-        ClassRoom[i][y1] = "0" 
-        
-    # x 행 부분
-    # ClassRoom[x1-1][y1] ~ ClassRoom[x1+1][y1]
-    
-    for j in range(y1-1,y1+2): # 인덱스 y-1 ~ y+1
-        if ClassRoom[x1][j] == "*": # 만약 주난이면 스킵
-            continue
-        elif ClassRoom[x1][j] == "#": # 만약 범인이면 !!! 잡았다 요놈
-            ClassRoom[x1][j] = "X"
-            print(count)
-            break
-        
-        # 장애물들 깎아내기. 0으로
-        ClassRoom[x1][j] = "0" 
-        
-    break
-    
-    # 자 일단 첫번째 페이즈는 구현 완료
-    
+    next_queue = deque()  # 이번에 못 갔던 친구들 → 다음 턴에 갈 때 쓸 큐
 
-# 확인용 배열 출력 코드
-    
-for i in range(N):
-    print(i,"번째 열: ", ClassRoom[i])
+    # 지금 턴에서 갈 수 있는 곳들 하나씩 꺼내서 처리
+    while queue:
+        x, y = queue.popleft()
+
+        for i in range(4):  # 상하좌우로 한 칸씩 움직여봄
+            nx = x + dx[i]
+            ny = y + dy[i]
+
+            # 교실 밖이면 스킵
+            if not (0 <= nx < N and 0 <= ny < M):
+                continue
+
+            # 이미 갔던 곳이면 스킵
+            if visited[nx][ny]:
+                continue
+
+            visited[nx][ny] = True  # 방문 처리
+
+            if room[nx][ny] == '#':  # 범인 만나면 끝
+                print(count)
+                exit()
+
+            if room[nx][ny] == '0':  # 빈칸은 바로 이동 가능
+                queue.append((nx, ny))
+            elif room[nx][ny] == '1':  # 친구는 지금 못 가고 다음 턴에
+                next_queue.append((nx, ny))
+
+    # 이번 턴 끝났으면 다음 턴 큐로 넘겨줌
+    queue = next_queue
